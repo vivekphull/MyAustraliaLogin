@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">MyAustraliaLogin</string>
+    <string name="facebook_app_id">1552657324805511</string>
+    <string name="title_activity_home">Home</string>
+
+    <string name="drawer_open">drawer open</string>
+    <string name="drawer_close">drawer close</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="default_image_descriptor">Selected image for ImageRecognition</string>
+    <string name="camera_button_descriptor">Open Camera Application</string>
+    <string name="gallery_button_descriptor">Open Gallery</string>
+    <string name="alert_dialog_ok">OK</string>
+    <string name="alert_dialog_close">Close Application</string>
+    <string name="error_title_default">Error in Visual recognition</string>
+    <string name="error_title_invalid_credentials">Invalid Visual Recognition Credentials</string>
+    <string name="error_message_invalid_credentials">Please verify your credentials in \"values/credentials\" and rebuild the application.\n\nSee the README for further assistance.</string>
+    <string name="error_title_bluemix_connection">Failed to Connect to Bluemix</string>
+    <string name="error_message_bluemix_connection">Please verify your connection to the internet and try again.\n\nSee the README for further assistance.</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="google_place_api">AIzaSyDeYloQ_EX9ZDP44gUuNTC-m1JKckIpwvE</string>
+    <string-array name="Counsils">
+        <item>City of Adelaide</item>
+        <item>Department of Planning, Transport and Infrastructure </item>
+        <item>SA Power Networks</item>
+        <item>SA Water</item>
+        <item>SA Police</item>
+    </string-array>
+</resources>

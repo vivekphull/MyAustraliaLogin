@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.pavi_developing.myaustralialogin.PrepareReport">
+    <LinearLayout
+        android:id="@+id/toolbarlayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+        <include
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            layout="@layout/toolbar_layout"
+            />
+    </LinearLayout>
+
+
+
+    <TextView
+        android:text="Select Location"
+        android:id="@+id/getplace"
+        android:layout_width="270dp"
+        android:textAlignment="center"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:background="#ffffff"
+        android:textColor="#000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.537"
+        app:layout_constraintVertical_bias="0.589"
+        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="368dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_weight="0.74"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:weightSum="1"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbarlayout"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp">
+
+        <ImageView
+            android:id="@+id/ivImage"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_weight="1.01"
+            android:src="@drawable/camera" />
+    </LinearLayout>
+
+    <Switch
+        android:id="@+id/privacy"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:text="Report Anonymously"
+        android:layout_marginRight="8dp"
+        android:background="#ffffff"
+        android:textSize="20dp"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/getplace"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintVertical_bias="0.075"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <EditText
+        android:id="@+id/description"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:textSize="20dp"
+        android:hint="Optional Description"
+        android:inputType="textMultiLine"
+        android:maxLength="200"
+        android:maxLines="3"
+        android:background="#ffffff"
+        android:textColor="#000000"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/privacy"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_bias="0.591"
+        app:layout_constraintVertical_bias="0.088"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+
+
+
+    <Button
+        android:id="@+id/report_button"
+        android:layout_width="270dp"
+        android:layout_height="wrap_content"
+        android:background="#ffffff"
+        android:onClick="onclickreport"
+        android:padding="4sp"
+        android:text="Report Issue"
+        android:textColor="#000000"
+        android:textSize="30dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/description"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+    <TextView
+        android:id="@+id/tagstext"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:layout_marginRight="8dp"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/description"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/report_button"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp" />
+
+</android.support.constraint.ConstraintLayout>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "518770484869",
+    "project_id": "myaustralia-176413"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:518770484869:android:8338416cc08e21bb",
+        "android_client_info": {
+          "package_name": "com.pavi_developing.myaustralialogin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "518770484869-1s9hpdb5nl6nchronn8ofi0s4p5rn6s6.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "518770484869-tab1970kq4umr2t40bahq3u46p92i37r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pavi_developing.myaustralialogin",
+            "certificate_hash": "157d1c48645dc59136346f089626af0e8b493bc3"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmL0CdYGQ53bIoqSMB07r1qcga0_wohjk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

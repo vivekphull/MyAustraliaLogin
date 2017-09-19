@@ -1,0 +1,46 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentLeft="false"
+    android:layout_alignParentRight="false"
+    tools:context="com.pavi_developing.myaustralialogin.HomeFragment">
+
+    <!-- TODO: Update blank fragment layout -->
+    <ImageView
+        android:id="@+id/welcome"
+        android:layout_width="300dp"
+        android:layout_height="200dp"
+        app:srcCompat="@drawable/welcome"
+        android:layout_above="@+id/frameLayout2"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="60dp" />
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="2sp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:background="#000000"
+        android:id="@+id/frameLayout2"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="172dp">
+
+        <Button
+            android:id="@+id/report_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ffffff"
+            android:onClick="onclickreport"
+            android:padding="10sp"
+            android:text="Report Issue"
+            android:textColor="#000000"
+            android:textSize="30dp" />
+    </FrameLayout>
+
+
+
+
+</RelativeLayout>
