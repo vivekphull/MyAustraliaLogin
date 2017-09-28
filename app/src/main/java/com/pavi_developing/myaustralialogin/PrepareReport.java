@@ -211,12 +211,12 @@ public class PrepareReport extends AppCompatActivity {
         final CharSequence[] items = { "Take Photo", "Choose from Library",
                 "Cancel" };
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(PrepareReport.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
         builder.setTitle("Add Photo!");
         builder.setItems(items, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int item) {
-                boolean result=Utility.checkPermission(PrepareReport.this);
+                boolean result=Utility.checkPermission(getApplicationContext());
 
                 if (items[item].equals("Take Photo")) {
                     userChoosenTask ="Take Photo";
