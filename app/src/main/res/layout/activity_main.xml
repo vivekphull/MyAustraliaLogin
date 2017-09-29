@@ -44,7 +44,20 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_gravity="center"
+            android:visibility="visible"
             android:text="Login" />
+        <Button
+            android:id="@+id/twitter_logout_button"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:drawablePadding="10dp"
+            android:textColor="@color/tw__composer_white"
+            android:background="#00aced"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            android:layout_weight="1"
+            android:text="Logout"
+            android:drawableLeft="@drawable/twitter"/>
         <View
             android:layout_width="0dp"
             android:layout_height="match_parent"
