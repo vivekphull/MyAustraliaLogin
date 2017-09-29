@@ -37,6 +37,13 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             }
         });
+
+        view.findViewById(R.id.map_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getActivity(), MappedReports.class));
+            }
+        });
         return view;
     }
 
