@@ -89,7 +89,7 @@ public class PrepareReport extends AppCompatActivity {
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("PrepareReport");
         textView=(TextView)findViewById(R.id.getplace);
-        textView.setVisibility(View.GONE);
+
         getTagstext=(TextView)findViewById(R.id.tagstext);
         getTagstext.setVisibility(View.GONE);
         editText=(EditText)findViewById(R.id.description);
@@ -111,6 +111,7 @@ public class PrepareReport extends AppCompatActivity {
                 GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
                 getTags.execute(bitmap);
                 PlacePicker.IntentBuilder builder= new PlacePicker.IntentBuilder();
+                /* Get Location Code /
                 try {
                     startActivityForResult(builder.build(PrepareReport.this), PLACE_PICKER_REQ);
                 } catch (GooglePlayServicesRepairableException e) {
@@ -118,6 +119,7 @@ public class PrepareReport extends AppCompatActivity {
                 } catch (GooglePlayServicesNotAvailableException e) {
                     e.printStackTrace();
                 }
+                /**/
             }
         });
 
