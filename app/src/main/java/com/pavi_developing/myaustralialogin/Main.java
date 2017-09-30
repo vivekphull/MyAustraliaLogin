@@ -45,6 +45,8 @@ public class Main extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        startActivity(new Intent(Main.this, Home.class));
+
         initializeInstance(this);
         initializeView();
         initializeVariables();

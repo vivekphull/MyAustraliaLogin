@@ -112,8 +112,8 @@ public class PrepareReport extends AppCompatActivity {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
-//                getTags.execute(bitmap);
+                GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
+                getTags.execute(bitmap);
                 PlacePicker.IntentBuilder builder= new PlacePicker.IntentBuilder();
                 /* Get Location Code */
                 try {
@@ -200,7 +200,7 @@ public class PrepareReport extends AppCompatActivity {
 
     private void insertDataToStatus(final String address, final String identity, final String description, final String image) {
         RequestQueue engine = Volley.newRequestQueue(this);
-        String url = "http://54.169.235.153:1000/api/status";
+        String url = "http://13.229.108.76:1000/api/status";
         final Response.Listener<String> onSuccess = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
