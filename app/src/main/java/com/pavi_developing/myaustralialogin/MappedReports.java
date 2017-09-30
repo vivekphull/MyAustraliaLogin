@@ -52,12 +52,13 @@ public class MappedReports extends FragmentActivity
         GoogleMap.OnMyLocationChangeListener {
 
     GoogleMap mMap;
-    private LocationManager locationManager;
     RequestQueue engine;
 
     private static final long MIN_TIME = 400;
     private static final float MIN_DISTANCE = 1000;
-    private boolean locationPermission;
+    private boolean
+            locationPermission,
+            currentLocationZoomed;
     String url, TAG = "MapRep/";
 
     @Override
@@ -65,27 +66,26 @@ public class MappedReports extends FragmentActivity
         super.onCreate(savedInstanceState);
 
         initializePermissions();
-        initializeViews(getApplicationContext());
+        initializeViews();
         initialCalls();
 
     }
 
     private void initialCalls() {
-        moveToCurrentLocation();
+        Log.e(TAG+"initCalls", "Function Call");
+        if(!allPermissionsAreGranted())
+            return;
+
         getData();
     }
 
     private void getData() {
+        Log.e(TAG+"getData", "Function Call");
         final Response.Listener<JSONArray> onSuccess = new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
                 Log.i(TAG+"API", String.valueOf(response));
-                try {
-                    testFirstEntry(response.get(0));
-                } catch (JSONException e) {
-                    Log.e(TAG+"API/JSONExp", "Index out of bound");
-                    e.printStackTrace();
-                }
+                mapReports(response);
             }
         };
         final Response.ErrorListener onFailure = new Response.ErrorListener() {
@@ -98,13 +98,16 @@ public class MappedReports extends FragmentActivity
         engine.add(new JsonArrayRequest(Request.Method.GET, url, null, onSuccess, onFailure));
     }
 
-    private void testFirstEntry(Object data) {
-        Log.i(TAG+"test", data.toString());
-        JSONObject obj = (JSONObject) data;
+    private void mapReports(JSONArray data) {
+        Log.i(TAG+"test", ""+data.length());
+        if(!(data.length()>0))
+            return;
         try {
-            Log.i(TAG+"test", "Geometry: "+obj.get("geometry"));
-            obj = (JSONObject) obj.get("geometry");
-            Log.i(TAG+"test", "Geometry/Coordinates: "+obj.get("coordinates"));
+            JSONObject obj = (JSONObject) data.remove(0);
+            mapReports(data);
+            JSONArray arr = obj.getJSONObject("geometry").getJSONArray("coordinates");
+            if(obj.getBoolean("active"))
+                mMap.addMarker(getMarker(new LatLng(arr.getDouble(1), arr.getDouble(0)), obj.getString("description"), R.mipmap.ic_launcher));
         } catch (JSONException e) {
             Log.i(TAG+"test/Exp", "Invalid Index");
             e.printStackTrace();
@@ -112,19 +115,21 @@ public class MappedReports extends FragmentActivity
 
     }
 
-    private void moveToCurrentLocation() {
-
-    }
-
     private void initializePermissions() {
+        locationPermission = false;
+
         // ACCESS FINE LOCATION
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
-
+        } else
+            locationPermission = true;
     }
 
-    private void initializeViews(Context context) {
+    private void initializeViews() {
+        if(!allPermissionsAreGranted())
+            return;
+
         setContentView(R.layout.activity_mapped_reports);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -134,9 +139,17 @@ public class MappedReports extends FragmentActivity
         initializeVariables();
     }
 
+    private boolean allPermissionsAreGranted() {
+        boolean granted = true;
+        granted = (locationPermission)?granted:locationPermission;
+
+        Log.d(TAG+"AllPerGra", "\n\nLocation: "+locationPermission+"\nfinal bool: "+granted);
+        return granted;
+    }
+
     private void initializeVariables() {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationPermission = true;
+        currentLocationZoomed =
+                false;
 
         engine = Volley.newRequestQueue(this);
         url = "http://13.229.108.76:1000/api/status";
@@ -161,18 +174,32 @@ public class MappedReports extends FragmentActivity
 
     private void moveCamera(Location location) {
         LatLng latLong = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLong, 10000));
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DISTANCE, (android.location.LocationListener) this); //You can also use LocationManager.GPS_PROVIDER and LocationManager.PASSIVE_PROVIDER
+
+        switch (permissions[requestCode]) {
+            case Manifest.permission.ACCESS_FINE_LOCATION:
+                locationPermission = (grantResults[requestCode]==0);
+                if(!locationPermission)
+                    finish();
+                break;
+        }
+
+        initializeViews();
+        initialCalls();
     }
 
     @Override
     public void onMyLocationChange(Location location) {
         Log.i(TAG+"onLocCh","Location: "+location);
-        moveCamera(location);
+        if(!currentLocationZoomed) {
+            currentLocationZoomed = true;
+            moveCamera(location);
+            mMap.setOnMyLocationChangeListener(null);
+        }
     }
 }

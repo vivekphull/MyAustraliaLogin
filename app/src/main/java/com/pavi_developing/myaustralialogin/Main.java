@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -40,12 +41,11 @@ public class Main extends AppCompatActivity {
     TwitterSession session;
 
     boolean twitterLoggedIn;
+    String TAG = "Main/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        startActivity(new Intent(Main.this, Home.class));
 
         initializeInstance(this);
         initializeView();
@@ -112,6 +112,7 @@ public class Main extends AppCompatActivity {
     private void initializeInstance(Context context) {
         FacebookSdk.sdkInitialize(context);
         Twitter.initialize(context);
+        Log.d(TAG+"initInstance", "Instance Initialized");
     }
 
     private void initializeView() {
@@ -120,30 +121,33 @@ public class Main extends AppCompatActivity {
         twitterLogoutButton = (Button) findViewById(R.id.twitter_logout_button);
         fb_login_button=(LoginButton)findViewById(R.id.fb_login_button);
         login_status_view =(TextView)findViewById(R.id.fblogin_status_view);
+        Log.d(TAG+"initView", "View Initialized");
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG+"onActRes", "Function Called:\n\nreqCode: "+requestCode+"\nresCode: "+resultCode+"\ndata: "+data);
         callbackManager.onActivityResult(requestCode,resultCode,data);
         twitterLoginButton.onActivityResult(requestCode, resultCode, data);
     }
+
     private void updateWithToken(AccessToken currentAccessToken) {
+        Log.d(TAG+"updWitToken", "Facebook\n\nisLoggedIn: "+currentAccessToken);
         String msg = "Please Login.";
         if (currentAccessToken != null) {
             msg = "Logged in.";
-            Intent i = new Intent(Main.this, Home.class);
-            startActivity(i);
+            startActivity(new Intent(Main.this, Home.class));
         }
         login_status_view.setText(msg);
     }
     private void updateWithToken(AuthToken currentAccessToken) {
+        Log.d(TAG+"updWitToken", "Twitter\n\nisLoggedIn: "+currentAccessToken);
         String msg = "Please Login.";
         twitterLoggedIn = false;
         if (currentAccessToken != null) {
             msg = "Logged in.";
             twitterLoggedIn = true;
-            Intent i = new Intent(Main.this, Home.class);
-            startActivity(i);
+            startActivity(new Intent(Main.this, Home.class));
         }
         login_status_view.setText(msg);
         switchTwitterButtonVisibility();

@@ -1,5 +1,33 @@
 package com.pavi_developing.myaustralialogin;
 
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.location.LocationManager;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Base64;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -12,46 +40,6 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.VisualRecognition;
-import com.ibm.watson.developer_cloud.visual_recognition.v3.model.VisualClassification;
-import com.pavi_developing.myaustralialogin.R;
-
-import android.*;
-import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
-import android.location.LocationManager;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
-import android.util.Base64;
-import android.util.Log;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -67,45 +55,57 @@ import java.util.Map;
 
 public class PrepareReport extends AppCompatActivity {
 
-    private String userChoosenTask;
-    int PLACE_PICKER_REQ=2;
-    private int REQUEST_CAMERA = 0, SELECT_FILE = 1;
+    private int
+            REQUEST_CAMERA = 0,
+            SELECT_FILE = 1,
+            PLACE_PICKER_REQ=2;
+    private String
+            image_json,
+            address_json,
+            description,
+            tagclass,
+            userChoosenTask,
+            TAG = "PreRep/";
+    private boolean externalStoragePermission;
+
     ImageView ivImage;
-    TextView textView;
-    TextView getTagstext;
+    TextView
+    textView,
+    getTagstext;
     Button button;
+
     EditText editText;
     JSONObject jsonreport;
     Switch aSwitch;
     private VisualRecognition visualService;
-    String tagclass;
     Bitmap bitmap;
-    String image_json;
-    String address_json;
-    String switch_json;
-    String description;
     Toolbar toolbar;
-
+    public static AmazonClientManager clientManager = null;
     private LocationManager locationManager;
 
-    public static AmazonClientManager clientManager = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        initializeViews(this);
-        initializeVariables();
-        initializeClickListeners();
+        initializePermissions();
+        initializeViews();
+    }
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+
+    private void initializePermissions() {
+        externalStoragePermission = false;
+
+        // EXTERNAL STORAGE ACCESS
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if ( ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED )
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PackageManager.PERMISSION_GRANTED);
+
+            else if( ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED )
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PackageManager.PERMISSION_GRANTED);
+            else
+                externalStoragePermission = true;
         }
-
-
-//        selectImage();
-        ValidateCredentialsTask vct = new ValidateCredentialsTask();
-        vct.execute();
+        Log.d(TAG+"initPerm", "Permissions Initialized");
     }
 
     private void initializeClickListeners() {
@@ -115,7 +115,6 @@ public class PrepareReport extends AppCompatActivity {
                 GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
                 getTags.execute(bitmap);
                 PlacePicker.IntentBuilder builder= new PlacePicker.IntentBuilder();
-                /* Get Location Code */
                 try {
                     Log.i("PreReq/GetLoc", "Trying for location");
                     startActivityForResult(builder.build(PrepareReport.this), PLACE_PICKER_REQ);
@@ -126,10 +125,6 @@ public class PrepareReport extends AppCompatActivity {
                     Log.i("PreReq/GetLoc", gpsnae.toString());
                     gpsnae.printStackTrace();
                 }
-                /*/
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-                /**/
             }
         });
 
@@ -139,21 +134,11 @@ public class PrepareReport extends AppCompatActivity {
                 description=editText.getText().toString();
                 tagclass=getTagstext.getText().toString();
 
-                if(aSwitch.isChecked()){
-                    switch_json="hide";
-                }
-                else {
-                    switch_json="show";
-                }
-//               new SendReport(PrepareReport.this).execute("send",tagclass,address_json,switch_json,description,image_json);
-//                new DynamoDBManagerTask(tagclass,description,address_json,switch_json)
-//                        .execute(DynamoDBManagerType.INSERT_REPORT);
-
-                insertDataToStatus(address_json, switch_json, description, image_json);
+                insertDataToStatus(address_json, String.valueOf(aSwitch.isChecked()), description, image_json);
                 try {
                     jsonreport.put("TAG",tagclass);
                     jsonreport.put("ADDRESS",address_json);
-                    jsonreport.put("IDENTITY",switch_json);
+                    jsonreport.put("ACTIVE",aSwitch.isChecked());
                     jsonreport.put("DESCRIPTION",description);
                     jsonreport.put("IMAGE",image_json);
                     Log.e("JSON test",jsonreport.toString());
@@ -164,6 +149,7 @@ public class PrepareReport extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
         ivImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -178,10 +164,16 @@ public class PrepareReport extends AppCompatActivity {
         BMSClient.getInstance().initialize(getApplicationContext(), BMSClient.REGION_SYDNEY);
         visualService = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_20);
         visualService.setApiKey(getString(R.string.visualrecognitionApi_key));
+
+        initializeClickListeners();
     }
 
-    private void initializeViews(Activity activity) {
+    private void initializeViews() {
+        if(!allPermissionsAreGranted())
+            return;
+
         setContentView(R.layout.activity_prepare_report);
+
         toolbar=(Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("PrepareReport");
@@ -196,6 +188,8 @@ public class PrepareReport extends AppCompatActivity {
         editText.setVisibility(View.GONE);
         button.setVisibility(View.GONE);
         ivImage = (ImageView) findViewById(R.id.ivImage);
+
+        initializeVariables();
     }
 
     private void insertDataToStatus(final String address, final String identity, final String description, final String image) {
@@ -228,6 +222,12 @@ public class PrepareReport extends AppCompatActivity {
         engine.add(post);
     }
 
+    private boolean allPermissionsAreGranted() {
+        boolean granted = true;
+        granted = (externalStoragePermission)?granted:externalStoragePermission;
+        return granted;
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -242,13 +242,18 @@ public class PrepareReport extends AppCompatActivity {
                 }
                 break;
 
-            case 0: // ACCESS_FINE_LOCATION
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 400, 1000, (android.location.LocationListener) this); //You can also use LocationManager.GPS_PROVIDER and LocationManager.PASSIVE_PROVIDER
-                break;
-
             default:
-                Log.i("PreRep/onReqPerResult", "requestCode: "+requestCode);
+                switch (permissions[requestCode]) {
+                    case Manifest.permission.WRITE_EXTERNAL_STORAGE:
+                        externalStoragePermission = (grantResults[requestCode]==0);
+                        if(!externalStoragePermission)
+                            finish();
+                        break;
+                }
         }
+        Log.i("PreRep/onReqPerResult", "requestCode: "+requestCode+"\nPermission: "+permissions[requestCode]+"\ngrant: "+grantResults[requestCode]);
+
+        initializeViews();
     }
 
     private void selectImage() {
@@ -280,18 +285,12 @@ public class PrepareReport extends AppCompatActivity {
         builder.show();
     }
 
-    private void galleryIntent()
-    {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);//
-        startActivityForResult(Intent.createChooser(intent, "Select File"),SELECT_FILE);
+    private void galleryIntent() {
+        startActivityForResult(Intent.createChooser(new Intent().setType("image/*").setAction(Intent.ACTION_GET_CONTENT), "Select File"),SELECT_FILE);
     }
 
-    private void cameraIntent()
-    {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, REQUEST_CAMERA);
+    private void cameraIntent() {
+        startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), REQUEST_CAMERA);
     }
 
     @Override
