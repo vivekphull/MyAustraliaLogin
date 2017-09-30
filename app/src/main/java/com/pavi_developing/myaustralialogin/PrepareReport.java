@@ -15,8 +15,11 @@ import com.ibm.watson.developer_cloud.visual_recognition.v3.VisualRecognition;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.model.VisualClassification;
 import com.pavi_developing.myaustralialogin.R;
 
+import android.*;
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -24,11 +27,14 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -79,46 +85,50 @@ public class PrepareReport extends AppCompatActivity {
     String switch_json;
     String description;
     Toolbar toolbar;
+
+    private LocationManager locationManager;
+
     public static AmazonClientManager clientManager = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_prepare_report);
-        selectImage();
-        toolbar=(Toolbar)findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("PrepareReport");
-        textView=(TextView)findViewById(R.id.getplace);
 
-        getTagstext=(TextView)findViewById(R.id.tagstext);
-        getTagstext.setVisibility(View.GONE);
-        editText=(EditText)findViewById(R.id.description);
-        aSwitch=(Switch)findViewById(R.id.privacy);
-        button=(Button)findViewById(R.id.report_button);
-        aSwitch.setVisibility(View.GONE);
-        editText.setVisibility(View.GONE);
-        button.setVisibility(View.GONE);
-        jsonreport=new JSONObject();
-        clientManager = new AmazonClientManager(this);
-        BMSClient.getInstance().initialize(getApplicationContext(), BMSClient.REGION_SYDNEY);
-        visualService = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_20);
-        visualService.setApiKey(getString(R.string.visualrecognitionApi_key));
+        initializeViews(this);
+        initializeVariables();
+        initializeClickListeners();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+        }
+
+
+//        selectImage();
         ValidateCredentialsTask vct = new ValidateCredentialsTask();
         vct.execute();
+    }
+
+    private void initializeClickListeners() {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
-                getTags.execute(bitmap);
+//                GetTags getTags=new GetTags(PrepareReport.this,getTagstext,button,visualService);
+//                getTags.execute(bitmap);
                 PlacePicker.IntentBuilder builder= new PlacePicker.IntentBuilder();
-                /* Get Location Code /
+                /* Get Location Code */
                 try {
+                    Log.i("PreReq/GetLoc", "Trying for location");
                     startActivityForResult(builder.build(PrepareReport.this), PLACE_PICKER_REQ);
-                } catch (GooglePlayServicesRepairableException e) {
-                    e.printStackTrace();
-                } catch (GooglePlayServicesNotAvailableException e) {
-                    e.printStackTrace();
+                } catch (GooglePlayServicesRepairableException gpsre) {
+                    gpsre.printStackTrace();
+                    Log.i("PreReq/GetLoc", gpsre.toString());
+                } catch (GooglePlayServicesNotAvailableException gpsnae) {
+                    Log.i("PreReq/GetLoc", gpsnae.toString());
+                    gpsnae.printStackTrace();
                 }
+                /*/
+                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
                 /**/
             }
         });
@@ -126,11 +136,11 @@ public class PrepareReport extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                 description=editText.getText().toString();
+                description=editText.getText().toString();
                 tagclass=getTagstext.getText().toString();
 
                 if(aSwitch.isChecked()){
-                   switch_json="hide";
+                    switch_json="hide";
                 }
                 else {
                     switch_json="show";
@@ -154,13 +164,38 @@ public class PrepareReport extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 selectImage();
             }
         });
+    }
+
+    private void initializeVariables() {
+        jsonreport=new JSONObject();
+        clientManager = new AmazonClientManager(this);
+        BMSClient.getInstance().initialize(getApplicationContext(), BMSClient.REGION_SYDNEY);
+        visualService = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_20);
+        visualService.setApiKey(getString(R.string.visualrecognitionApi_key));
+    }
+
+    private void initializeViews(Activity activity) {
+        setContentView(R.layout.activity_prepare_report);
+        toolbar=(Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("PrepareReport");
+        textView=(TextView)findViewById(R.id.getplace);
+
+        getTagstext=(TextView)findViewById(R.id.tagstext);
+        getTagstext.setVisibility(View.GONE);
+        editText=(EditText)findViewById(R.id.description);
+        aSwitch=(Switch)findViewById(R.id.privacy);
+        button=(Button)findViewById(R.id.report_button);
+        aSwitch.setVisibility(View.GONE);
+        editText.setVisibility(View.GONE);
+        button.setVisibility(View.GONE);
+        ivImage = (ImageView) findViewById(R.id.ivImage);
     }
 
     private void insertDataToStatus(final String address, final String identity, final String description, final String image) {
@@ -206,6 +241,13 @@ public class PrepareReport extends AppCompatActivity {
                     //code for deny
                 }
                 break;
+
+            case 0: // ACCESS_FINE_LOCATION
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 400, 1000, (android.location.LocationListener) this); //You can also use LocationManager.GPS_PROVIDER and LocationManager.PASSIVE_PROVIDER
+                break;
+
+            default:
+                Log.i("PreRep/onReqPerResult", "requestCode: "+requestCode);
         }
     }
 
@@ -275,6 +317,7 @@ public class PrepareReport extends AppCompatActivity {
                 textView.setText(address);
             }
         }
+        Log.i("PreReq/GetLoc", "\n\nreqCode: "+requestCode+"\nresCode: "+resultCode+"\ndata: "+data);
 
     }
 
