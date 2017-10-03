@@ -80,6 +80,9 @@ public class GetTags extends AsyncTask<Bitmap,Integer,VisualClassification> {
 
     @Override
     protected void onPostExecute(VisualClassification classification) {
+        Log.d("GetTag/onPostExe", "Classification: "+classification);
+        if (classification == null)
+            return;
         List<ImageClassification> classifications = classification.getImages();
      //   for (int i = 0; i < classifications.size(); i++) {
             List<VisualClassifier> classifiers = classifications.get(0).getClassifiers();
@@ -88,9 +91,9 @@ public class GetTags extends AsyncTask<Bitmap,Integer,VisualClassification> {
                 List<VisualClassifier.VisualClass> visualClasses = classifiers.get(0).getClasses();
               //  if (visualClasses == null) break;
                 for (VisualClassifier.VisualClass visualClass : visualClasses) {
-                    String formattedScore = String.format(Locale.US, "%.0f", visualClass.getScore() * 100) + "%";
+                    String formattedScore = String.format(Locale.US, "%.0f", visualClass.getScore() * 100);
 
-                    tags=visualClass.getName();
+                    tags=visualClass.getName()+"-"+formattedScore;
                     textView.setText(tags);
                     Log.e("TAGS Class name : ",""+tags);
                     Log.e("TAGS Score : ",""+formattedScore);

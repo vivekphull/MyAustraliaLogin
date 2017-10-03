@@ -3,13 +3,16 @@ package com.pavi_developing.myaustralialogin;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +24,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -32,6 +36,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -41,6 +46,7 @@ import com.google.android.gms.location.places.ui.PlacePicker;
 import com.ibm.mobilefirstplatform.clientsdk.android.core.api.BMSClient;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.VisualRecognition;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -49,6 +55,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,13 +72,15 @@ public class PrepareReport extends AppCompatActivity {
             description,
             tagclass,
             userChoosenTask,
+            axis,
             TAG = "PreRep/";
     private boolean externalStoragePermission;
+    Uri imageUri;
 
     ImageView ivImage;
     TextView
-    textView,
-    getTagstext;
+            textView,
+            getTagstext;
     Button button;
 
     EditText editText;
@@ -82,6 +91,7 @@ public class PrepareReport extends AppCompatActivity {
     Toolbar toolbar;
     public static AmazonClientManager clientManager = null;
     private LocationManager locationManager;
+    private ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,22 +141,13 @@ public class PrepareReport extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                description=editText.getText().toString();
-                tagclass=getTagstext.getText().toString();
-
-                insertDataToStatus(address_json, String.valueOf(aSwitch.isChecked()), description, image_json);
+                insertDataToStatus(address_json, String.valueOf(aSwitch.isChecked()), editText.getText().toString());
+//                tagclass=getTagstext.getText().toString();
                 try {
-                    jsonreport.put("TAG",tagclass);
-                    jsonreport.put("ADDRESS",address_json);
-                    jsonreport.put("ACTIVE",aSwitch.isChecked());
-                    jsonreport.put("DESCRIPTION",description);
-                    jsonreport.put("IMAGE",image_json);
-                    Log.e("JSON test",jsonreport.toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                    dialog.show();
+                } catch (WindowManager.BadTokenException bte) {
+                    Toast.makeText(getApplicationContext(), "Sending...", Toast.LENGTH_SHORT).show();
                 }
-                Intent intent=new Intent(PrepareReport.this,Final.class);
-                startActivity(intent);
             }
         });
 
@@ -156,6 +157,12 @@ public class PrepareReport extends AppCompatActivity {
                 selectImage();
             }
         });
+
+        initialCalls();
+    }
+
+    private void initialCalls() {
+        new ValidateCredentialsTask().execute();
     }
 
     private void initializeVariables() {
@@ -164,6 +171,11 @@ public class PrepareReport extends AppCompatActivity {
         BMSClient.getInstance().initialize(getApplicationContext(), BMSClient.REGION_SYDNEY);
         visualService = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_20);
         visualService.setApiKey(getString(R.string.visualrecognitionApi_key));
+
+
+        dialog = new ProgressDialog(this.getApplicationContext());
+        dialog.setTitle("Adding your report to our Database...");
+        dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 
         initializeClickListeners();
     }
@@ -192,34 +204,61 @@ public class PrepareReport extends AppCompatActivity {
         initializeVariables();
     }
 
-    private void insertDataToStatus(final String address, final String identity, final String description, final String image) {
-        RequestQueue engine = Volley.newRequestQueue(this);
-        String url = "http://13.229.108.76:1000/api/status";
-        final Response.Listener<String> onSuccess = new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Toast.makeText(getApplicationContext(), "Data Inserted !", Toast.LENGTH_LONG).show();
-            }
-        };
-        final Response.ErrorListener onFailure = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError response) {
-                Toast.makeText(getApplicationContext(), "Data Not Inserted...", Toast.LENGTH_LONG).show();
-                Log.e("API", String.valueOf(response));
-            }
-        };
-        StringRequest post = new StringRequest(Request.Method.POST, url, onSuccess, onFailure){
-            @Override
-            protected Map<String, String> getParams() {
-                Map<String, String> params = new HashMap<String, String>();
-                params.put("address", address);
-                params.put("identity", identity);
-                params.put("description", description);
-//                params.put("image", image);
-                return params;
-            }
-        };
-        engine.add(post);
+    private void insertDataToStatus(final String address, final String identity, final String description) {
+        JSONObject
+                obj = new JSONObject(),
+                user = new JSONObject();
+
+        boolean isTwitter = getIntent().getExtras().getBoolean("isTwitter");
+        String userName = getIntent().getExtras().getString("userName");
+        try {
+            user.put("id", userName.split("/")[1]);
+            user.put("source", (isTwitter)?"Twitter": "Facebook");
+            user.put("name", (isTwitter)?userName.split("/")[0]:userName);
+
+            obj.put("address", address);
+            obj.put("identity", identity);
+            obj.put("description", description);
+            obj.put("active", true);
+            obj.put("user", user);
+            obj.put("tag", getTagstext.getText().toString().split("-")[0]);
+            obj.put("score", getTagstext.getText().toString().split("-")[1]);
+            obj.put("geometry", new JSONArray().put(axis.split(",")[0]).put(axis.split(",")[1]));
+            obj.put("image", image_json);
+            Log.i(TAG+"JSON", "Object: "+obj);
+            Volley.newRequestQueue(this).add(new JsonObjectRequest(
+                    Request.Method.POST,
+                    "http://13.229.108.76:1000/api/status",
+                    obj,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Log.d(TAG + "API-S", "Res: " + response);
+                            startActivity( new Intent(getApplicationContext(), Final.class)
+                                    .putExtra("tag", getTagstext.getText().toString().split("-")[0])
+                                    .putExtra("score", getTagstext.getText().toString().split("-")[1])
+                                    .putExtra("description", description)
+                                    .putExtra("address", address)
+                                    .putExtra("imageUri", imageUri)
+                            );
+                            dialog.dismiss();
+                            finish();
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(TAG+"API-F", "Error: "+error);
+                            dialog.dismiss();
+                            Toast.makeText(getApplicationContext(), "Data Not Sent...", Toast.LENGTH_LONG).show();
+                        }
+                    })
+            );
+        } catch (JSONException e) {
+            Log.e(TAG+"API/JSONExc", "Error: "+e);
+            e.printStackTrace();
+        }
+        Log.d(TAG+"JSON", "Object: "+obj);
     }
 
     private boolean allPermissionsAreGranted() {
@@ -303,12 +342,13 @@ public class PrepareReport extends AppCompatActivity {
                 onSelectFromGalleryResult(data);
             }
             else if (requestCode == REQUEST_CAMERA) {
-                Log.d("camera :"," image-2");
                 onCaptureImageResult(data);
             } else if (requestCode ==PLACE_PICKER_REQ) {
-                Log.d("Location :"," loc-1");
                 Place place=PlacePicker.getPlace(data,this);
+                Log.e(TAG+"onActRes/LocReq","Data: "+place);
+                Log.i(TAG+"onActRes/LocReq","Data: "+place.getLatLng().toString());
                 String address=String.format("%s",place.getAddress());
+                axis = String.valueOf(place.getLatLng().latitude)+","+String.valueOf(place.getLatLng().longitude);
                 address_json=address;
                 aSwitch.setVisibility(View.VISIBLE);
                 editText.setVisibility(View.VISIBLE);
@@ -346,22 +386,28 @@ public class PrepareReport extends AppCompatActivity {
         BitmapDrawable drawable = (BitmapDrawable) ivImage.getDrawable();
         bitmap = drawable.getBitmap();
         bitmap=resizeBitmapForWatson(bitmap,1200);
+
     }
 
     @SuppressWarnings("deprecation")
     private void onSelectFromGalleryResult(Intent data) {
-
+        Log.e(TAG+"onSelFromGalRes", "Data: "+data+"\ntag: "+getTagstext.getText());
+        Log.i(TAG+"onSelFromGalRes", "Data: "+data.getData());
+        Log.d(TAG+"onSelFromGalRes", "Data: "+data.getDataString());
+        imageUri = data.getData();
         Bitmap bm=null;
-        if (data != null) {
-            try {
-                bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bm.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-                byte[] byteArray = byteArrayOutputStream .toByteArray();
-                image_json = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+        try {
+            bm = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bm.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+            byte[] byteArray = byteArrayOutputStream .toByteArray();
+            image_json = Base64.encodeToString(byteArray, Base64.DEFAULT);
+            Log.d(TAG+"imageJson", "{ image: "+image_json+"}");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NullPointerException ne) {
+            Log.e(TAG+"onImageSelected", "Data is NULL");
         }
 
         ivImage.setImageBitmap(bm);
@@ -370,6 +416,7 @@ public class PrepareReport extends AppCompatActivity {
         bitmap = drawable.getBitmap();
         bitmap=resizeBitmapForWatson(bitmap,1200);
     }
+
     private class ValidateCredentialsTask extends AsyncTask<Void, Void, Void> {
 
         @Override

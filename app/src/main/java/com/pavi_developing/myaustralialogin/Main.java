@@ -59,7 +59,7 @@ public class Main extends AppCompatActivity {
 
             @Override
             public void onCancel() {
-                login_status_view.setText("Login failed");
+                login_status_view.setText("Login Cancelled");
             }
 
             @Override
@@ -69,6 +69,7 @@ public class Main extends AppCompatActivity {
         twitterLoginButton.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
+                session = TwitterCore.getInstance().getSessionManager().getActiveSession();
                 updateWithToken(result.data.getAuthToken());
             }
 
@@ -89,24 +90,24 @@ public class Main extends AppCompatActivity {
     }
 
     private void initializeVariables() {
-        twitterLoggedIn = false;
         callbackManager=CallbackManager.Factory.create();
         session = TwitterCore.getInstance().getSessionManager().getActiveSession();
-        /* Tweet /
-        tweetIntent = new ComposerActivity.Builder(this)
-                .session(session)
-                .text("My First Tweet")
-                .hashtags("#myAussieLogin @PhullVivek")
-                .createIntent();
-        /**/
+        twitterLoggedIn = (session!=null);
+
+        boolean directLogin = true;
+        if( getIntent().getExtras()!=null )
+            directLogin = getIntent().getExtras().getBoolean("directLogin");
+
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldAccessToken, AccessToken newAccessToken) {
                 updateWithToken(newAccessToken);
             }
         };
-        if(session!=null)
+        if(twitterLoggedIn && directLogin)
             updateWithToken(session.getAuthToken());
+
+        switchTwitterButtonVisibility();
     }
 
     private void initializeInstance(Context context) {
@@ -136,7 +137,7 @@ public class Main extends AppCompatActivity {
         String msg = "Please Login.";
         if (currentAccessToken != null) {
             msg = "Logged in.";
-            startActivity(new Intent(Main.this, Home.class));
+            onLoginSuccess("FB-User/"+currentAccessToken.getUserId(), false);
         }
         login_status_view.setText(msg);
     }
@@ -147,10 +148,15 @@ public class Main extends AppCompatActivity {
         if (currentAccessToken != null) {
             msg = "Logged in.";
             twitterLoggedIn = true;
-            startActivity(new Intent(Main.this, Home.class));
+            onLoginSuccess(session.getUserName()+"/"+session.getUserId(), true);
         }
         login_status_view.setText(msg);
         switchTwitterButtonVisibility();
+    }
+
+    private void onLoginSuccess(String userName, boolean isTwiiter) {
+        startActivity(new Intent(Main.this, Home.class).putExtra("userName", userName).putExtra("isTwitter", isTwiiter));
+        finish();
     }
 
     private void switchTwitterButtonVisibility() {

@@ -97,12 +97,16 @@ public class Home extends AppCompatActivity {
                         break;
 
                     case R.id.account_id:
+                        /*
                         fragmentTransaction=getSupportFragmentManager().beginTransaction();
                         fragmentTransaction.replace(R.id.main_container,new AccountFragment());
                         fragmentTransaction.commit();
                         getSupportActionBar().setTitle("Account");
                         item.setChecked(true);
                         drawerLayout.closeDrawers();
+                        */
+                        startActivity(new Intent(getApplicationContext(), Main.class).putExtra("directLogin", false));
+                        finish();
                         break;
 
                 }

@@ -33,8 +33,12 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v)
             {
-                Intent intent=new Intent(getActivity(),PrepareReport.class);
-                startActivity(intent);
+                startActivity(new Intent(
+                        getActivity(),
+                        PrepareReport.class)
+                        .putExtra("userName", getActivity().getIntent().getExtras().getString("userName"))
+                        .putExtra("isTwitter", getActivity().getIntent().getExtras().getBoolean("isTwitter"))
+                );
             }
         });
 
